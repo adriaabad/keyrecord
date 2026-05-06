@@ -22,11 +22,11 @@
 
 ### Main window
 
-![KeyRecord main screenshot](docs/images/keyrecord (1).png)
+![KeyRecord main screenshot](docs/images/keyrecord(2).png)
 
 ### System tray
 
-![KeyRecord tray screenshot](docs/images/keyrecord (2).png)
+![KeyRecord tray screenshot](docs/images/keyrecord(1).png)
 
 ---
 
