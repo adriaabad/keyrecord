@@ -4,12 +4,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 import tracker
+import layouts
 
-
-KEYBOARD_LAYOUTS = [
-    "ISO-ES 100%",
-    "ANSI-US 100%"
-]
 
 SETTINGS_FILE = "data/settings.json"
 
@@ -117,7 +113,7 @@ def load_settings():
         settings = DEFAULT_SETTINGS.copy()
         settings.update(loaded_settings)
 
-        if settings["keyboard_layout"] not in KEYBOARD_LAYOUTS:
+        if settings["keyboard_layout"] not in layouts.available_names():
             settings["keyboard_layout"] = DEFAULT_SETTINGS["keyboard_layout"]
 
         if settings["view_mode"] not in ["total", "session"]:
@@ -339,7 +335,7 @@ class KeyRecordApp:
         self.layout_select = ttk.Combobox(
             self.controls_frame,
             textvariable=self.keyboard_layout_name,
-            values=KEYBOARD_LAYOUTS,
+            values=layouts.available_names(),
             state="readonly",
             width=16
         )
@@ -482,6 +478,9 @@ class KeyRecordApp:
 
         return tracker.stats
 
+    def get_current_layout(self):
+        return layouts.get_layout(self.keyboard_layout_name.get())
+
     def change_keyboard_layout(self, event=None):
         self.save_current_settings()
 
@@ -501,10 +500,10 @@ class KeyRecordApp:
 
         self.configure_keyboard_grid(function_row, columns=20, rows=1)
 
-        is_iso = self.keyboard_layout_name.get() == "ISO-ES 100%"
-        print_label = "Impr" if is_iso else "PrtSc"
-        scroll_label = "Bloq" if is_iso else "ScrLk"
-        pause_label = "Pausa" if is_iso else "Pause"
+        function_labels = self.get_current_layout().function_labels
+        print_label = function_labels["print_screen"]
+        scroll_label = function_labels["scroll_lock"]
+        pause_label = function_labels["pause"]
 
         self.create_key(function_row, "esc", "Esc", 0, 0)
         self.create_empty_key_space(function_row, 0, 1)
@@ -598,44 +597,13 @@ class KeyRecordApp:
     def build_main_keyboard_block(self, parent):
         self.configure_keyboard_grid(parent, columns=15, rows=5)
 
-        is_iso = self.keyboard_layout_name.get() == "ISO-ES 100%"
+        layout = self.get_current_layout()
 
-        if is_iso:
-            number_row = [
-                ("º", "º"), ("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"),
-                ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0"), ("'", "'"), ("¡", "¡")
-            ]
-            top_letter_row = [
-                ("q", "Q"), ("w", "W"), ("e", "E"), ("r", "R"), ("t", "T"), ("y", "Y"),
-                ("u", "U"), ("i", "I"), ("o", "O"), ("p", "P"), ("`", "`"), ("+", "+"), ("ç", "Ç")
-            ]
-            home_row = [
-                ("a", "A"), ("s", "S"), ("d", "D"), ("f", "F"), ("g", "G"), ("h", "H"),
-                ("j", "J"), ("k", "K"), ("l", "L"), ("ñ", "Ñ"), ("´", "´")
-            ]
-            bottom_row = [
-                ("<", "<"), ("z", "Z"), ("x", "X"), ("c", "C"), ("v", "V"), ("b", "B"),
-                ("n", "N"), ("m", "M"), (",", ","), (".", "."), ("-", "-")
-            ]
-            right_alt_label = "AltGr"
-        else:
-            number_row = [
-                ("`", "`"), ("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5"),
-                ("6", "6"), ("7", "7"), ("8", "8"), ("9", "9"), ("0", "0"), ("-", "-"), ("=", "=")
-            ]
-            top_letter_row = [
-                ("q", "Q"), ("w", "W"), ("e", "E"), ("r", "R"), ("t", "T"), ("y", "Y"),
-                ("u", "U"), ("i", "I"), ("o", "O"), ("p", "P"), ("[", "["), ("]", "]"), ("\\", "\\")
-            ]
-            home_row = [
-                ("a", "A"), ("s", "S"), ("d", "D"), ("f", "F"), ("g", "G"), ("h", "H"),
-                ("j", "J"), ("k", "K"), ("l", "L"), (";", ";"), ("'", "'")
-            ]
-            bottom_row = [
-                ("z", "Z"), ("x", "X"), ("c", "C"), ("v", "V"), ("b", "B"),
-                ("n", "N"), ("m", "M"), (",", ","), (".", "."), ("/", "/")
-            ]
-            right_alt_label = "Alt"
+        number_row = layout.rows["number"]
+        top_letter_row = layout.rows["top_letter"]
+        home_row = layout.rows["home"]
+        bottom_row = layout.rows["bottom"]
+        right_alt_label = layout.right_alt_label
 
         for index, (key_id, label) in enumerate(number_row):
             self.create_key(parent, key_id, label, 0, index)
@@ -659,7 +627,7 @@ class KeyRecordApp:
         for index, (key_id, label) in enumerate(bottom_row):
             self.create_key(parent, key_id, label, 3, index + 2)
 
-        if is_iso:
+        if layout.is_iso:
             self.create_key(parent, "shift", "Shift", 3, 13, colspan=2)
         else:
             self.create_key(parent, "shift", "Shift", 3, 12, colspan=3)
@@ -676,12 +644,12 @@ class KeyRecordApp:
     def build_navigation_block(self, parent):
         self.configure_keyboard_grid(parent, columns=3, rows=5)
 
-        is_iso = self.keyboard_layout_name.get() == "ISO-ES 100%"
-        home_label = "Inicio" if is_iso else "Home"
-        page_up_label = "RePág" if is_iso else "PgUp"
-        delete_label = "Supr" if is_iso else "Del"
-        end_label = "Fin" if is_iso else "End"
-        page_down_label = "AvPág" if is_iso else "PgDn"
+        nav_labels = self.get_current_layout().nav_labels
+        home_label = nav_labels["home"]
+        page_up_label = nav_labels["page_up"]
+        delete_label = nav_labels["delete"]
+        end_label = nav_labels["end"]
+        page_down_label = nav_labels["page_down"]
 
         self.create_key(parent, "insert", "Ins", 0, 0)
         self.create_key(parent, "home", home_label, 0, 1)
@@ -706,7 +674,7 @@ class KeyRecordApp:
     def build_numpad_block(self, parent):
         self.configure_keyboard_grid(parent, columns=4, rows=5)
 
-        decimal_label = "," if self.keyboard_layout_name.get() == "ISO-ES 100%" else "."
+        decimal_label = self.get_current_layout().numpad_decimal
 
         self.create_key(parent, "num_lock", "Num", 0, 0)
         self.create_key(parent, "num_divide", "/", 0, 1)
